@@ -7,37 +7,91 @@
  */
 
 import React, { Component } from "react";
-
-import {
-  Platform,
-  StyleSheet,
-  Text,
-  View,
-  FlatList,
-  Image
-} from "react-native";
+import { StyleSheet, View, AsyncStorage } from "react-native";
 
 import pokemon from "./src/pokemon";
 
-const instructions = Platform.select({
-  ios: "Press Cmd+R to reload,\n" + "Cmd+D or shake for dev menu",
-  android:
-    "Double tap R on your keyboard to reload,\n" +
-    "Shake or press menu button for dev menu"
-});
+import PokedexPicker from "./src/components/pokedex-picker";
+import ShowSelected from "./src/components/show-selected";
+import Pokedex from "./src/components/pokedex";
 
 export default class App extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = { selectedPokemon: [], mode: "National", showSelected: true };
+    this.selectPokemon = this.selectPokemon.bind(this);
+    this.onModeChange = this.onModeChange.bind(this);
+    this.toggleShowSelected = this.toggleShowSelected.bind(this);
+  }
+
+  async componentDidMount() {
+    const selectedPokemon = JSON.parse(
+      (await AsyncStorage.getItem("selectedPokemon")) || "[]"
+    );
+
+    const mode = (await AsyncStorage.getItem("selectedMode")) || "National";
+
+    const showSelected = JSON.parse(
+      (await AsyncStorage.getItem("showSelected")) || "true"
+    );
+
+    this.setState({ selectedPokemon, mode, showSelected });
+  }
+
+  async selectPokemon(pokemonName) {
+    const { selectedPokemon } = this.state;
+
+    const isAlreadyInState = selectedPokemon.includes(pokemonName);
+
+    const newSelectedPokemon = isAlreadyInState
+      ? selectedPokemon.filter(name => name !== pokemonName)
+      : [...this.state.selectedPokemon, pokemonName];
+
+    await AsyncStorage.setItem(
+      "selectedPokemon",
+      JSON.stringify(newSelectedPokemon)
+    );
+
+    this.setState({
+      selectedPokemon: newSelectedPokemon
+    });
+  }
+
+  async toggleShowSelected() {
+    const showSelected = !this.state.showSelected;
+    await AsyncStorage.setItem("showSelected", JSON.stringify(showSelected));
+
+    this.setState({ showSelected });
+  }
+
+  async onModeChange(mode) {
+    await AsyncStorage.setItem("selectedMode", mode);
+
+    this.setState({ mode });
+  }
+
   render() {
+    const { selectedPokemon, mode, showSelected } = this.state;
+
     return (
       <View style={styles.container}>
-        <FlatList
-          data={pokemon}
-          renderItem={({ item }) => (
-            <Image
-              style={{ width: 400, height: 50 }}
-              source={{ uri: item.sprite }}
-            />
-          )}
+        <View style={styles.topbar}>
+          <PokedexPicker mode={mode} onModeChange={this.onModeChange} />
+          <ShowSelected
+            checked={showSelected}
+            onPress={this.toggleShowSelected}
+          />
+        </View>
+        <Pokedex
+          mode={mode}
+          showSelected={showSelected}
+          selectPokemon={this.selectPokemon}
+          selectedPokemon={selectedPokemon}
+          pokemon={pokemon.filter(({ region }) => region).map(pokemon => ({
+            ...pokemon,
+            selected: selectedPokemon.includes(pokemon.name)
+          }))}
         />
       </View>
     );
@@ -46,19 +100,14 @@ export default class App extends Component {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5FCFF"
+    backgroundColor: "#F5FCFF",
+    width: "100%",
+    paddingTop: 20
   },
-  welcome: {
-    fontSize: 20,
-    textAlign: "center",
-    margin: 10
-  },
-  instructions: {
-    textAlign: "center",
-    color: "#333333",
-    marginBottom: 5
+  topbar: {
+    flexDirection: "column",
+    justifyContent: "space-evenly",
+    alignItems: "flex-start",
+    paddingLeft: 10
   }
 });
