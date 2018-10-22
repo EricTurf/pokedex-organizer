@@ -10,7 +10,10 @@ export default class PokemonList extends React.Component {
       <FlatList
         showsVerticalScrollIndicator={false}
         style={{ width: "100%" }}
-        contentContainerStyle={{ justifyContent: "flex-start" }}
+        contentContainerStyle={{
+          justifyContent: "flex-start",
+          paddingBottom: 60
+        }}
         data={pokemon}
         renderItem={({ item }) => <PokemonItem {...item} onPress={onPress} />}
       />
