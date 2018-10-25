@@ -12,7 +12,7 @@ export default class PokemonList extends React.Component {
         style={{ width: "100%" }}
         contentContainerStyle={{
           justifyContent: "flex-start",
-          paddingBottom: 60
+          paddingBottom: 200
         }}
         data={pokemon}
         renderItem={({ item }) => <PokemonItem {...item} onPress={onPress} />}

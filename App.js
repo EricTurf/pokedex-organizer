@@ -108,6 +108,6 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "space-evenly",
     alignItems: "flex-start",
-    paddingLeft: 10
+    paddingLeft: 5
   }
 });
